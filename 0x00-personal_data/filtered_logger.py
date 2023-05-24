@@ -30,14 +30,18 @@ class RedactingFormatter(logging.Formatter):
         return super().format(record)
 
 
-def filter_datum(fields: List[str], redaction: str, message: str, separator: str) -> str:
+def filter_datum(fields: List[str], redaction: str,
+                 message: str, separator: str) -> str:
     """filters the person data from a message
 
     Args:
-        fields (list): a list of strings representing all fields to obfuscate
-        redaction (str): a string representing by what the field will be obfuscated
+        fields (list): a list of strings representing
+        all fields to obfuscate
+        redaction (str): a string representing by what
+        the field will be obfuscated
         message (str): a string representing the log line
-        separator (str): a string representing by which character is separating all
+        separator (str): a string representing by whic
+        character is separating all
         fields in the log line (message)
     """
     for field in fields:
@@ -48,6 +52,7 @@ def filter_datum(fields: List[str], redaction: str, message: str, separator: str
 
 
 def get_logger() -> logging.Logger:
+    """set up a logger with formatter, streamhandler and level"""
     logger = logging.getLogger("user_data")
     logger.setLevel(logging.INFO)
 
@@ -60,6 +65,7 @@ def get_logger() -> logging.Logger:
 
 
 def get_db():
+    """uses my-sql connector to connect to a db"""
     username = environ.get("PERSONAL_DATA_DB_USERNAME", "root")
     password = environ.get("PERSONAL_DATA_DB_PASSWORD", "")
     host = environ.get("PERSONAL_DATA_DB_HOST", "localhost")
@@ -72,13 +78,14 @@ def get_db():
 
 
 def main():
+    """main function; fetches data from a db and hashes the PII"""
     db_connector = get_db()
     cursor = db_connector.cursor()
     cursor.execute("SELECT * FROM users;")
     rows = cursor.fetchall()
     logger = get_logger()
     field_names = [i[0] for i in cursor.description]
-    
+
     for row in rows:
         str_row = ''.join(f'{f}={str(r)}; ' for r, f in zip(row, field_names))
         logger.info(str_row.strip())
@@ -88,4 +95,5 @@ def main():
 
 
 if __name__ == "__main__":
+    """main"""
     main()
