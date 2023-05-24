@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""filtered_logger"""
-
+"""
+Module for handling Personal Data
+"""
 import logging
 import mysql.connector
 from os import environ
@@ -8,7 +9,43 @@ import re
 from typing import List
 
 
-PII_FIELDS = ['name', 'email', 'phone', 'ssn', ' password']
+PII_FIELDS = ("name", "email", "phone", "ssn", "password")
+
+
+def filter_datum(fields: List[str], redaction: str,
+                 message: str, separator: str) -> str:
+    """ Returns a log message obfuscated """
+    for f in fields:
+        message = re.sub(f'{f}=.*?{separator}',
+                         f'{f}={redaction}{separator}', message)
+    return message
+
+
+def get_logger() -> logging.Logger:
+    """ Returns a Logger Object """
+    logger = logging.getLogger("user_data")
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(RedactingFormatter(list(PII_FIELDS)))
+    logger.addHandler(stream_handler)
+
+    return logger
+
+
+def get_db() -> mysql.connector.connection.MySQLConnection:
+    """ Returns a connector to a MySQL database """
+    username = environ.get("PERSONAL_DATA_DB_USERNAME", "root")
+    password = environ.get("PERSONAL_DATA_DB_PASSWORD", "")
+    host = environ.get("PERSONAL_DATA_DB_HOST", "localhost")
+    db_name = environ.get("PERSONAL_DATA_DB_NAME")
+
+    cnx = mysql.connector.connection.MySQLConnection(user=username,
+                                                     password=password,
+                                                     host=host,
+                                                     database=db_name)
+    return cnx
 
 
 class RedactingFormatter(logging.Formatter):
@@ -20,81 +57,36 @@ class RedactingFormatter(logging.Formatter):
     SEPARATOR = ";"
 
     def __init__(self, fields: List[str]):
+        """ Constructor Method """
         super(RedactingFormatter, self).__init__(self.FORMAT)
         self.fields = fields
 
     def format(self, record: logging.LogRecord) -> str:
-        message = super().format(record)
-        message = filter_datum(
-            self.fields, self.REDACTION, message, self.SEPARATOR)
-        record.msg = message
-        return super().format(record)
-
-
-def filter_datum(fields: List[str], redaction: str,
-                 message: str, separator: str) -> str:
-    """filters the person data from a message
-
-    Args:
-        fields (list): a list of strings representing
-        all fields to obfuscate
-        redaction (str): a string representing by what
-        the field will be obfuscated
-        message (str): a string representing the log line
-        separator (str): a string representing by whic
-        character is separating all
-        fields in the log line (message)
-    """
-    for field in fields:
-        message = re.sub(f'{field}=.*?(?={separator})',
-                         f'{field}={redaction}', message)
-
-    return message
-
-
-def get_logger() -> logging.Logger:
-    """set up a logger with formatter, streamhandler and level"""
-    logger = logging.getLogger("user_data")
-    logger.setLevel(logging.INFO)
-
-    formatter = RedactingFormatter(list(PII_FIELDS))
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
-
-    return logger
-
-
-def get_db():
-    """uses my-sql connector to connect to a db"""
-    username = environ.get("PERSONAL_DATA_DB_USERNAME", "root")
-    password = environ.get("PERSONAL_DATA_DB_PASSWORD", "")
-    host = environ.get("PERSONAL_DATA_DB_HOST", "localhost")
-    db_name = environ.get("PERSONAL_DATA_DB_NAME")
-
-    db_connect = mysql.connector.connection.MySQLConnection(
-        user=username, password=password, host=host, database=db_name)
-
-    return db_connect
+        """ Filters values in incoming log records using filter_datum """
+        record.msg = filter_datum(self.fields, self.REDACTION,
+                                  record.getMessage(), self.SEPARATOR)
+        return super(RedactingFormatter, self).format(record)
 
 
 def main():
-    """main function; fetches data from a db and hashes the PII"""
-    db_connector = get_db()
-    cursor = db_connector.cursor()
+    """
+    Obtain a database connection using get_db and retrieves all rows
+    in the users table and display each row under a filtered format
+    """
+    db = get_db()
+    cursor = db.cursor()
     cursor.execute("SELECT * FROM users;")
-    rows = cursor.fetchall()
-    logger = get_logger()
     field_names = [i[0] for i in cursor.description]
 
-    for row in rows:
+    logger = get_logger()
+
+    for row in cursor:
         str_row = ''.join(f'{f}={str(r)}; ' for r, f in zip(row, field_names))
         logger.info(str_row.strip())
 
     cursor.close()
-    db_connector.close()
+    db.close()
 
 
-if __name__ == "__main__":
-    """main"""
+if __name__ == '__main__':
     main()
