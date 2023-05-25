@@ -48,6 +48,7 @@ class RedactingFormatter(logging.Formatter):
             self.fields, self.REDACTION, record.getMessage(), self.SEPARATOR)
         return super().format(record)
 
+
 def get_logger() -> logging.Logger:
     """set up a logger with formatter, streamhandler and level"""
     logger = logging.getLogger("user_data")
@@ -73,8 +74,8 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
         user=username, password=password, host=host, database=db_name)
 
     return db_connect
-	
-	
+
+
 def main():
     """main function; fetches data
     from a db and hashes the PII"""
