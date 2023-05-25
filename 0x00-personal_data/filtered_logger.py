@@ -29,6 +29,7 @@ def filter_datum(fields: List[str], redaction: str,
                          f'{field}={redaction}{separator}', message)
     return message
 
+
 def get_logger() -> logging.Logger:
     """set up a logger with formatter, streamhandler and level"""
     logger = logging.getLogger("user_data")
@@ -53,6 +54,7 @@ def get_db():
         user=username, password=password, host=host, database=db_name)
 
     return db_connect
+
 
 class RedactingFormatter(logging.Formatter):
     """ Redacting Formatter class
