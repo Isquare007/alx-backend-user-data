@@ -7,7 +7,8 @@ import base64
 class BasicAuth(Auth):
     """basic authentication"""
 
-    def extract_base64_authorization_header(self, authorization_header: str) -> str:
+    def extract_base64_authorization_header(
+            self, authorization_header: str) -> str:
         """extracts base authorization header"""
         if authorization_header is None:
             return None
@@ -19,7 +20,8 @@ class BasicAuth(Auth):
 
         return authorization_header.split(' ')[1]
 
-    def decode_base64_authorization_header(self, base64_authorization_header: str) -> str:
+    def decode_base64_authorization_header(
+            self, base64_authorization_header: str) -> str:
         """decodes base64"""
         if base64_authorization_header is None:
             return None
