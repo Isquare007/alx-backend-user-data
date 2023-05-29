@@ -64,10 +64,9 @@ class BasicAuth(Auth):
         except Exception as e:
             return None
 
-        user = list_users[0]
-
-        if user.is_valid_password(user_pwd):
-            return user
+        for user in list_users:
+            if user.is_valid_password(user_pwd):
+                return user
         return None
 
     def current_user(self, request=None) -> TypeVar('User'):
