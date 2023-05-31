@@ -29,6 +29,7 @@ if auth_type == 'session_auth':
     from api.v1.auth.session_auth import SessionAuth
     auth = SessionAuth()
 
+
 @app.before_request
 def before_request():
     """before request handler"""
@@ -44,7 +45,7 @@ def before_request():
 
     if auth.current_user(request) is None:
         abort(403)
-        
+
     request.current_user = auth.current_user(request)
 
 
