@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Session authentication"""
 from .auth import Auth
+from models.user import User
 import uuid
 
 
@@ -23,3 +24,9 @@ class SessionAuth(Auth):
             return None
 
         return self.user_id_by_session_id.get(session_id)
+
+    def current_user(self, request=None):
+        """overload that returns a user"""
+        cookie = self.session_cookie(request)
+        user = self.user_id_for_session_id(cookie)
+        return User.get(user)
