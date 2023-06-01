@@ -2,6 +2,7 @@
 """Auth class
 """
 from flask import request
+from flask import Flask
 from os import getenv
 from typing import List, TypeVar
 
@@ -43,6 +44,7 @@ class Auth:
 
     def current_user(self, request=None) -> TypeVar('User'):
         """return the current user"""
+        request = Flask(__name__)
         return None
 
     def session_cookie(self, request=None):
