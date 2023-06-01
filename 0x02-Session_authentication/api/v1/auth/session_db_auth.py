@@ -10,7 +10,12 @@ class SessionDBAuth(SessionExpAuth):
 
     def create_session(self, user_id=None):
         """overloads create session"""
-        user_session = super().create_session(user_id)
+        session_id = super().create_session(user_id)
+        if session_id is None:
+            return None
+        kwargs = {'user_id': user_id, 'session_id': session_id}
+        user_session = UserSession(**kwargs)
+        user_session.save()
         return user_session
 
     def user_id_for_session_id(self, session_id=None):
@@ -41,11 +46,6 @@ class SessionDBAuth(SessionExpAuth):
         if session_id is None:
             return False
 
-        user_id = self.user_id_for_session_id(session_id)
-
-        if not user_id:
-            return False
-
         user_session = UserSession.search({'session_id': session_id})
 
         if not user_session:
@@ -55,7 +55,7 @@ class SessionDBAuth(SessionExpAuth):
 
         try:
             user_session.remove()
-            UserSession.save_to_file
+            UserSession.save()
         except Exception:
             return False
 
