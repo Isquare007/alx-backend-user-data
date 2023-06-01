@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Session authentication"""
-from .auth import Auth
+from api.v1.auth.auth import Auth
 from models.user import User
 import uuid
 
