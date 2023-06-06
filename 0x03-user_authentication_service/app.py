@@ -5,10 +5,10 @@ from flask import jsonify, Flask
 
 app = Flask(__name__)
 
-app.route('/', methods=['GET'])
+app.route('/', methods=['GET'], strict_slashes=False)
 
 
-def basic_app():
+def index():
     """returns a message"""
     return jsonify({"message": "Bienvenue"})
 
